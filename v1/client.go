@@ -1,8 +1,7 @@
 package bluzelledbgo
 
 import (
-	"net/http"
-	"net/url"
+	"google.golang.org/grpc"
 )
 
 //go:generate mockgen -source ./client.go -destination ./mock_client/mock.go
@@ -15,26 +14,31 @@ type BluezelleClient interface {
 }
 
 type Config struct {
-	mnemonic []string
-	apiURL   *url.URL
-	maxGas   int64
-	gasPrice float64
+	Mnemonic   []string
+	ApiAddress string
+	MaxGas     int64
+	GasPrice   float64
 }
 
 var _ BluezelleClient = &defaultBluezelleClient{}
 
 type defaultBluezelleClient struct {
 	config        *Config
-	httpClient    *http.Client
+	grpcConn      *grpc.ClientConn
 	querier       QueryClient
 	transactioner TransactionClient
 }
 
-func NewBluzelleClient(config *Config, httpClient *http.Client) *defaultBluezelleClient {
-	return &defaultBluezelleClient{
-		config:     config,
-		httpClient: httpClient,
+func NewBluzelleClient(config *Config) (*defaultBluezelleClient, error) {
+	grpcConn, err := grpc.Dial(config.ApiAddress, grpc.WithBlock())
+	if err != nil {
+		return nil, err
 	}
+
+	return &defaultBluezelleClient{
+		config:   config,
+		grpcConn: grpcConn,
+	}, nil
 }
 
 func (client *defaultBluezelleClient) Query() QueryClient {
