@@ -1,6 +1,10 @@
 package bluzelledbgo
 
 import (
+	"context"
+	"net"
+
+	tmnet "github.com/tendermint/tendermint/libs/net"
 	"google.golang.org/grpc"
 )
 
@@ -14,37 +18,53 @@ type BluezelleClient interface {
 }
 
 type Config struct {
-	Mnemonic   []string
-	ApiAddress string
-	MaxGas     int64
-	GasPrice   float64
+	Mnemonic    string
+	APIEndpoint string
+	MaxGas      int64
+	GasPrice    float64
+	UUID        string
 }
 
-var _ BluezelleClient = &defaultBluezelleClient{}
+var _ BluezelleClient = &defaultBluzelleClient{}
 
-type defaultBluezelleClient struct {
+type defaultBluzelleClient struct {
 	config        *Config
+	address       string
 	grpcConn      *grpc.ClientConn
 	querier       QueryClient
 	transactioner TransactionClient
 }
 
-func NewBluzelleClient(config *Config) (*defaultBluezelleClient, error) {
-	grpcConn, err := grpc.Dial(config.ApiAddress, grpc.WithBlock())
+func NewBluzelleClient(config *Config) (*defaultBluzelleClient, error) {
+	if config.Mnemonic == "" {
+		return nil, MISSING_MNEMONIC_ERROR
+	}
+
+	grpcConn, err := grpc.Dial(config.APIEndpoint, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, err
 	}
 
-	return &defaultBluezelleClient{
-		config:   config,
-		grpcConn: grpcConn,
+	return &defaultBluzelleClient{
+		config:        config,
+		grpcConn:      grpcConn,
+		querier:       NewQueryClient(config, grpcConn),
+		transactioner: NewTransactionClient(config, grpcConn),
 	}, nil
 }
 
-func (client *defaultBluezelleClient) Query() QueryClient {
+func (client *defaultBluzelleClient) Query() QueryClient {
 	return client.querier
 }
 
-func (client *defaultBluezelleClient) Transaction() TransactionClient {
+func (client *defaultBluzelleClient) Transaction() TransactionClient {
 	return client.transactioner
+}
+
+// func (client *defaultBluzelleClient) WithTransactions(ops TransactionOperation...) error {
+//
+// }
+
+func dialerFunc(ctx context.Context, addr string) (net.Conn, error) {
+	return tmnet.Connect(addr)
 }

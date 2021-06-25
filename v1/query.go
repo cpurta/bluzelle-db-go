@@ -3,7 +3,7 @@ package bluzelledbgo
 import (
 	"context"
 
-	pb "github.com/cpurta/bluzelle-db-go/codec/github.com/bluzelle/curium/x/crud/types"
+	pb "github.com/cpurta/bluzelle-db-go/types"
 	"google.golang.org/grpc"
 )
 

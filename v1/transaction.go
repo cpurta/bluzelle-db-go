@@ -1,38 +1,72 @@
 package bluzelledbgo
 
 import (
-	"net/http"
+	"context"
 
-	"github.com/cpurta/bluzelle-db-go/codec/github.com/bluzelle/curium/x/crud/types"
+	pb "github.com/cpurta/bluzelle-db-go/types"
+	"google.golang.org/grpc"
 )
 
 type TransactionClient interface {
-	Count(types.MsgCount) types.MsgCountResponse
-	RenewLeasesAll(types.MsgRenewLeasesAll) types.MsgRenewLeasesAllResponse
-	RenewLease(types.MsgRenewLease) types.MsgRenewLeaseResponse
-	GetNShortestLeases(types.MsgGetNShortestLeases) types.MsgGetNShortestLeasesResponse
-	Keys(types.MsgKeys) types.MsgKeysResponse
-	Rename(types.MsgRename) types.MsgRenameResponse
-	MultiUpdate(types.MsgMultiUpdate) types.MsgMultiUpdateResponse
-	DeleteAll(types.MsgDeleteAll) types.MsgDeleteAllResponse
-	KeyValues(types.MsgKeyValues) types.MsgKeyValuesResponse
-	Has(types.MsgHas) types.MsgHasResponse
-	GetLease(types.MsgGetLease) types.MsgGetLeaseResponse
-	Read(types.MsgRead) types.MsgReadResponse
-	Upsert(types.MsgUpsert) types.MsgUpsertResponse
-	Create(types.MsgCreate) types.MsgCreateResponse
-	Update(types.MsgUpdate) types.MsgUpdateResponse
-	Delete(types.MsgDelete) types.MsgDeleteResponse
+	Create(ctx context.Context, create *pb.MsgCreate) (*pb.MsgCreateResponse, error)
+	Delete(ctx context.Context, delete *pb.MsgDelete) (*pb.MsgDeleteResponse, error)
+	DeleteAll(ctx context.Context, deleteAll *pb.MsgDeleteAll) (*pb.MsgDeleteAllResponse, error)
+	MultiUpdate(ctx context.Context, multiUpdate *pb.MsgMultiUpdate) (*pb.MsgMultiUpdateResponse, error)
+	RenewLeasesAll(ctx context.Context, renewLeasesAll *pb.MsgRenewLeasesAll) (*pb.MsgRenewLeasesAllResponse, error)
+	RenewLease(ctx context.Context, renewLease *pb.MsgRenewLease) (*pb.MsgRenewLeaseResponse, error)
+	Rename(ctx context.Context, rename *pb.MsgRename) (*pb.MsgRenameResponse, error)
+	Update(ctx context.Context, update *pb.MsgUpdate) (*pb.MsgUpdateResponse, error)
+	Upsert(ctx context.Context, upsert *pb.MsgUpsert) (*pb.MsgUpsertResponse, error)
 }
+
+var _ TransactionClient = &defaultTransactionClient{}
 
 type defaultTransactionClient struct {
-	config     *Config
-	httpClient *http.Client
+	config   *Config
+	pbClient pb.MsgClient
 }
 
-func NewTransactionClient(config *Config, httpClient *http.Client) *defaultTransactionClient {
+func NewTransactionClient(config *Config, grpcConn *grpc.ClientConn) *defaultTransactionClient {
+	pbClient := pb.NewMsgClient(grpcConn)
+
 	return &defaultTransactionClient{
-		config:     config,
-		httpClient: httpClient,
+		config:   config,
+		pbClient: pbClient,
 	}
+}
+
+func (client *defaultTransactionClient) Create(ctx context.Context, create *pb.MsgCreate) (*pb.MsgCreateResponse, error) {
+	return client.pbClient.Create(ctx, create)
+}
+
+func (client *defaultTransactionClient) Delete(ctx context.Context, delete *pb.MsgDelete) (*pb.MsgDeleteResponse, error) {
+	return client.pbClient.Delete(ctx, delete)
+}
+
+func (client *defaultTransactionClient) DeleteAll(ctx context.Context, deleteAll *pb.MsgDeleteAll) (*pb.MsgDeleteAllResponse, error) {
+	return client.pbClient.DeleteAll(ctx, deleteAll)
+}
+
+func (client *defaultTransactionClient) MultiUpdate(ctx context.Context, multiUpdate *pb.MsgMultiUpdate) (*pb.MsgMultiUpdateResponse, error) {
+	return client.pbClient.MultiUpdate(ctx, multiUpdate)
+}
+
+func (client *defaultTransactionClient) RenewLeasesAll(ctx context.Context, renewLeasesAll *pb.MsgRenewLeasesAll) (*pb.MsgRenewLeasesAllResponse, error) {
+	return client.pbClient.RenewLeasesAll(ctx, renewLeasesAll)
+}
+
+func (client *defaultTransactionClient) RenewLease(ctx context.Context, renewLease *pb.MsgRenewLease) (*pb.MsgRenewLeaseResponse, error) {
+	return client.pbClient.RenewLease(ctx, renewLease)
+}
+
+func (client *defaultTransactionClient) Rename(ctx context.Context, rename *pb.MsgRename) (*pb.MsgRenameResponse, error) {
+	return client.pbClient.Rename(ctx, rename)
+}
+
+func (client *defaultTransactionClient) Update(ctx context.Context, update *pb.MsgUpdate) (*pb.MsgUpdateResponse, error) {
+	return client.pbClient.Update(ctx, update)
+}
+
+func (client *defaultTransactionClient) Upsert(ctx context.Context, upsert *pb.MsgUpsert) (*pb.MsgUpsertResponse, error) {
+	return client.pbClient.Upsert(ctx, upsert)
 }
