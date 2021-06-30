@@ -2,9 +2,13 @@ package bluzelledbgo
 
 import (
 	"context"
+	"fmt"
 
-	pb "github.com/cpurta/bluzelle-db-go/types"
-	"google.golang.org/grpc"
+	pb "github.com/bluzelle/curium/x/crud/types"
+	"github.com/tendermint/tendermint/libs/bytes"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"google.golang.org/protobuf/proto"
 )
 
 type QueryClient interface {
@@ -22,87 +26,87 @@ type QueryClient interface {
 var _ QueryClient = &defaultQueryClient{}
 
 type defaultQueryClient struct {
-	config   *Config
-	pbClient pb.QueryClient
+	config    *Config
+	rpcClient *rpchttp.HTTP
 }
 
-func NewQueryClient(config *Config, grpcConn *grpc.ClientConn) *defaultQueryClient {
-	pbClient := pb.NewQueryClient(grpcConn)
-
+func NewQueryClient(config *Config, rpcClient *rpchttp.HTTP) *defaultQueryClient {
 	return &defaultQueryClient{
-		config:   config,
-		pbClient: pbClient,
+		config:    config,
+		rpcClient: rpcClient,
 	}
 }
 
 func (client *defaultQueryClient) Count(ctx context.Context, uuid string) (*pb.QueryCountResponse, error) {
-	return client.pbClient.Count(ctx, &pb.QueryCountRequest{
-		Uuid: uuid,
-	})
+	var (
+		queryCountRequest = &pb.QueryCountRequest{
+			Uuid: uuid,
+		}
+		path               = fmt.Sprintf("custom/%s/list-CrudValue", pb.QuerierRoute)
+		data               []byte
+		response           *ctypes.ResultABCIQuery
+		value              []byte
+		queryCountResponse = &pb.QueryCountResponse{}
+		err                error
+	)
+
+	if data, err = proto.Marshal(queryCountRequest); err != nil {
+		return nil, err
+	}
+
+	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+		return nil, err
+	}
+
+	if response == nil {
+		return nil, NIL_RESPONSE_RETURNED_ERROR
+	}
+
+	value = response.Response.Value
+
+	if err = proto.Unmarshal(value, queryCountResponse); err != nil {
+		return nil, err
+	}
+
+	return queryCountResponse, nil
 }
 
 func (client *defaultQueryClient) GetLease(ctx context.Context, uuid, key string) (*pb.QueryGetLeaseResponse, error) {
-	return client.pbClient.GetLease(ctx, &pb.QueryGetLeaseRequest{
-		Uuid: uuid,
-		Key:  key,
-	})
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultQueryClient) GetNShortestLeases(ctx context.Context, uuid string, number int) (*pb.QueryGetNShortestLeasesResponse, error) {
-	return client.pbClient.GetNShortestLeases(ctx, &pb.QueryGetNShortestLeasesRequest{
-		Uuid: uuid,
-		Num:  uint32(number),
-	})
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultQueryClient) Has(ctx context.Context, uuid, key string) (*pb.QueryHasResponse, error) {
-	return client.pbClient.Has(ctx, &pb.QueryHasRequest{
-		Uuid: uuid,
-		Key:  key,
-	})
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultQueryClient) Keys(ctx context.Context, uuid, startKey string, limit int64) (*pb.QueryKeysResponse, error) {
-	return client.pbClient.Keys(ctx, &pb.QueryKeysRequest{
-		Uuid: uuid,
-		Pagination: &pb.PagingRequest{
-			StartKey: startKey,
-			Limit:    uint64(limit),
-		},
-	})
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultQueryClient) KeyValues(ctx context.Context, uuid, startKey string, limit int64) (*pb.QueryKeyValuesResponse, error) {
-	return client.pbClient.KeyValues(ctx, &pb.QueryKeyValuesRequest{
-		Uuid: uuid,
-		Pagination: &pb.PagingRequest{
-			StartKey: startKey,
-			Limit:    uint64(limit),
-		},
-	})
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultQueryClient) MyKeys(ctx context.Context, uuid, address string) (*pb.QueryMyKeysResponse, error) {
-	return client.pbClient.MyKeys(ctx, &pb.QueryMyKeysRequest{
-		Uuid:    uuid,
-		Address: address,
-	})
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultQueryClient) Read(ctx context.Context, uuid, key string) (*pb.QueryReadResponse, error) {
-	return client.pbClient.Read(ctx, &pb.QueryReadRequest{
-		Uuid: uuid,
-		Key:  key,
-	})
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultQueryClient) Search(ctx context.Context, uuid, searchString, startKey string, limit int64) (*pb.QuerySearchResponse, error) {
-	return client.pbClient.Search(ctx, &pb.QuerySearchRequest{
-		Uuid:         uuid,
-		SearchString: searchString,
-		Pagination: &pb.PagingRequest{
-			StartKey: startKey,
-			Limit:    uint64(limit),
-		},
-	})
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }

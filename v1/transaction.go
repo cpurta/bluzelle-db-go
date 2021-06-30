@@ -3,8 +3,11 @@ package bluzelledbgo
 import (
 	"context"
 
-	pb "github.com/cpurta/bluzelle-db-go/types"
-	"google.golang.org/grpc"
+	pb "github.com/bluzelle/curium/x/crud/types"
+	"github.com/tendermint/tendermint/libs/bytes"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"google.golang.org/protobuf/proto"
 )
 
 type TransactionClient interface {
@@ -22,51 +25,83 @@ type TransactionClient interface {
 var _ TransactionClient = &defaultTransactionClient{}
 
 type defaultTransactionClient struct {
-	config   *Config
-	pbClient pb.MsgClient
+	config    *Config
+	rpcClient *rpchttp.HTTP
 }
 
-func NewTransactionClient(config *Config, grpcConn *grpc.ClientConn) *defaultTransactionClient {
-	pbClient := pb.NewMsgClient(grpcConn)
-
+func NewTransactionClient(config *Config, rpcClient *rpchttp.HTTP) *defaultTransactionClient {
 	return &defaultTransactionClient{
-		config:   config,
-		pbClient: pbClient,
+		config:    config,
+		rpcClient: rpcClient,
 	}
 }
 
 func (client *defaultTransactionClient) Create(ctx context.Context, create *pb.MsgCreate) (*pb.MsgCreateResponse, error) {
-	return client.pbClient.Create(ctx, create)
+	var (
+		data           []byte
+		response       *ctypes.ResultABCIQuery
+		value          []byte
+		createResponse *pb.MsgCreateResponse
+		err            error
+	)
+
+	if data, err = proto.Marshal(create); err != nil {
+		return nil, err
+	}
+
+	if response, err = client.rpcClient.ABCIQuery(ctx, "/bluzelle.curium.crud.Msg/Create", bytes.HexBytes(data)); err != nil {
+		return nil, err
+	}
+
+	if response == nil {
+		return nil, NIL_RESPONSE_RETURNED_ERROR
+	}
+
+	value = response.Response.Value
+
+	if err = proto.Unmarshal(value, createResponse); err != nil {
+		return nil, err
+	}
+
+	return createResponse, nil
 }
 
 func (client *defaultTransactionClient) Delete(ctx context.Context, delete *pb.MsgDelete) (*pb.MsgDeleteResponse, error) {
-	return client.pbClient.Delete(ctx, delete)
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultTransactionClient) DeleteAll(ctx context.Context, deleteAll *pb.MsgDeleteAll) (*pb.MsgDeleteAllResponse, error) {
-	return client.pbClient.DeleteAll(ctx, deleteAll)
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultTransactionClient) MultiUpdate(ctx context.Context, multiUpdate *pb.MsgMultiUpdate) (*pb.MsgMultiUpdateResponse, error) {
-	return client.pbClient.MultiUpdate(ctx, multiUpdate)
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultTransactionClient) RenewLeasesAll(ctx context.Context, renewLeasesAll *pb.MsgRenewLeasesAll) (*pb.MsgRenewLeasesAllResponse, error) {
-	return client.pbClient.RenewLeasesAll(ctx, renewLeasesAll)
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultTransactionClient) RenewLease(ctx context.Context, renewLease *pb.MsgRenewLease) (*pb.MsgRenewLeaseResponse, error) {
-	return client.pbClient.RenewLease(ctx, renewLease)
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultTransactionClient) Rename(ctx context.Context, rename *pb.MsgRename) (*pb.MsgRenameResponse, error) {
-	return client.pbClient.Rename(ctx, rename)
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultTransactionClient) Update(ctx context.Context, update *pb.MsgUpdate) (*pb.MsgUpdateResponse, error) {
-	return client.pbClient.Update(ctx, update)
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }
 
 func (client *defaultTransactionClient) Upsert(ctx context.Context, upsert *pb.MsgUpsert) (*pb.MsgUpsertResponse, error) {
-	return client.pbClient.Upsert(ctx, upsert)
+	// TODO: implement
+	return nil, NOT_IMPLEMENTED_ERROR
 }

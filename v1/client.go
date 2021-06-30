@@ -1,11 +1,10 @@
 package bluzelledbgo
 
 import (
-	"context"
-	"net"
+	"fmt"
 
-	tmnet "github.com/tendermint/tendermint/libs/net"
-	"google.golang.org/grpc"
+	"github.com/cosmos/cosmos-sdk/client"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
 //go:generate mockgen -source ./client.go -destination ./mock_client/mock.go
@@ -30,7 +29,7 @@ var _ BluezelleClient = &defaultBluzelleClient{}
 type defaultBluzelleClient struct {
 	config        *Config
 	address       string
-	grpcConn      *grpc.ClientConn
+	rpcClient     *rpchttp.HTTP
 	querier       QueryClient
 	transactioner TransactionClient
 }
@@ -40,16 +39,16 @@ func NewBluzelleClient(config *Config) (*defaultBluzelleClient, error) {
 		return nil, MISSING_MNEMONIC_ERROR
 	}
 
-	grpcConn, err := grpc.Dial(config.APIEndpoint, grpc.WithInsecure(), grpc.WithBlock())
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to connect rpc websocket: %s", err.Error())
 	}
 
 	return &defaultBluzelleClient{
 		config:        config,
-		grpcConn:      grpcConn,
-		querier:       NewQueryClient(config, grpcConn),
-		transactioner: NewTransactionClient(config, grpcConn),
+		rpcClient:     rpcClient,
+		querier:       NewQueryClient(config, rpcClient),
+		transactioner: NewTransactionClient(config, rpcClient),
 	}, nil
 }
 
@@ -64,7 +63,3 @@ func (client *defaultBluzelleClient) Transaction() TransactionClient {
 // func (client *defaultBluzelleClient) WithTransactions(ops TransactionOperation...) error {
 //
 // }
-
-func dialerFunc(ctx context.Context, addr string) (net.Conn, error) {
-	return tmnet.Connect(addr)
-}
