@@ -2,6 +2,7 @@ package bluzelledbgo
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -9,11 +10,14 @@ import (
 	pb "github.com/cpurta/bluzelle-db-go/types"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 )
 
-const (
-	TransactionCreateResponse200 = `{"error":"","result":{"response":{"log":"","height":"0","value":"","key":"","index":"-1","code":"0"}},"id":0,"jsonrpc":"2.0"}`
-)
+func generate200TransactionResponse(log, key string, code int, value []byte) string {
+	valueStr := string(value)
+
+	return fmt.Sprintf(`{"error":"","result":{"response":{"log":"%s","height":"0","value":"%s","key":"%s","index":"-1","code":"%d"}},"id":0,"jsonrpc":"2.0"}`, log, valueStr, key, code)
+}
 
 func TestTransactionCreateHTTPMock(t *testing.T) {
 	httpmock.Activate()
@@ -25,15 +29,14 @@ func TestTransactionCreateHTTPMock(t *testing.T) {
 		statusCode       int
 		apiURL           string
 		createMsg        *pb.MsgCreate
-		responseBody     string
-		expectedResponse *pb.QueryCountResponse
+		expectedResponse *pb.MsgCreateResponse
 		expectedError    error
 	}{
 		{
 			name:       "200 txn create response returned",
 			method:     http.MethodGet,
 			statusCode: http.StatusInternalServerError,
-			apiURL:     testnetURL + "/abci_query",
+			apiURL:     testnetURL,
 			createMsg: &pb.MsgCreate{
 				Creator: "bluezelleFAKEADDRESS",
 				Uuid:    "testUUID",
@@ -44,22 +47,32 @@ func TestTransactionCreateHTTPMock(t *testing.T) {
 				},
 				Metadata: []byte{},
 			},
-			responseBody:  TransactionCreateResponse200,
-			expectedError: nil,
+			expectedResponse: &pb.MsgCreateResponse{},
+			expectedError:    nil,
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			config := &Config{
-				APIEndpoint: testnetURL,
-			}
+			var (
+				config = &Config{
+					APIEndpoint: testnetURL,
+				}
+				responseData []byte
+				err          error
+			)
 
 			rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
 
 			assert.Nil(t, err)
 
-			stringResponder := httpmock.NewStringResponder(tc.statusCode, tc.responseBody)
+			if tc.expectedResponse != nil {
+				if responseData, err = proto.Marshal(tc.expectedResponse); err != nil {
+					t.Errorf("was not expecting an error proto marshalling expected response")
+				}
+			}
+
+			stringResponder := httpmock.NewStringResponder(tc.statusCode, generate200TransactionResponse("", tc.createMsg.Key, 0, responseData))
 
 			httpmock.RegisterResponder(tc.method, tc.apiURL, stringResponder)
 

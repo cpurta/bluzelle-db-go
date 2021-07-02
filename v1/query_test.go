@@ -13,7 +13,7 @@ import (
 
 const (
 	testnetURL       = "https://client.sentry.testnet.private.bluzelle.com:26657"
-	QueryResponse200 = `{"error":"","result":{"response":{"log":"","height":"0","value":"","key":"","index":"-1","code":"0"}},"id":0,"jsonrpc":"2.0"}`
+	QueryResponse200 = `{"jsonrpc":"2.0","id":1234,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"Cgh0ZXN0VVVJRA==","proofOps":null,"height":"95396","codespace":""}}}`
 )
 
 func TestQueryCountHTTPMock(t *testing.T) {
@@ -33,7 +33,7 @@ func TestQueryCountHTTPMock(t *testing.T) {
 			name:         "200 query response returned",
 			method:       http.MethodGet,
 			statusCode:   http.StatusInternalServerError,
-			apiURL:       testnetURL + "/abci_query",
+			apiURL:       testnetURL,
 			responseBody: QueryResponse200,
 			expectedResponse: &pb.QueryCountResponse{
 				Uuid:  "testUUID",
