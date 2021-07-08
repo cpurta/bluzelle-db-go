@@ -10,6 +10,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+//go:generate mockgen -source ./transaction.go -destination ./mock_client/mock_transaction.go -package mock_client
+
 type TransactionClient interface {
 	Create(ctx context.Context, create *pb.MsgCreate) (*pb.MsgCreateResponse, error)
 	Delete(ctx context.Context, delete *pb.MsgDelete) (*pb.MsgDeleteResponse, error)
@@ -20,6 +22,16 @@ type TransactionClient interface {
 	Rename(ctx context.Context, rename *pb.MsgRename) (*pb.MsgRenameResponse, error)
 	Update(ctx context.Context, update *pb.MsgUpdate) (*pb.MsgUpdateResponse, error)
 	Upsert(ctx context.Context, upsert *pb.MsgUpsert) (*pb.MsgUpsertResponse, error)
+
+	NewTransactionCreate(create *pb.MsgCreate) TransactionOperation
+	NewTransactionDelete(delete *pb.MsgDelete) TransactionOperation
+	NewTransactionDeleteAll(deleteAll *pb.MsgDeleteAll) TransactionOperation
+	NewTransactionMultiUpdate(multiUpdate *pb.MsgMultiUpdate) TransactionOperation
+	NewTransactionRenewLeasesAll(renewLeasesAll *pb.MsgRenewLeasesAll) TransactionOperation
+	NewTransactionRenewLease(renewLease *pb.MsgRenewLease) TransactionOperation
+	NewTransactionRename(rename *pb.MsgRename) TransactionOperation
+	NewTransactionUpdate(update *pb.MsgUpdate) TransactionOperation
+	NewTransactionUpsert(update *pb.MsgUpsert) TransactionOperation
 }
 
 var _ TransactionClient = &defaultTransactionClient{}

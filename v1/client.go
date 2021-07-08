@@ -1,13 +1,14 @@
 package bluzelledbgo
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
-//go:generate mockgen -source ./client.go -destination ./mock_client/mock.go
+//go:generate mockgen -source ./client.go -destination ./mock_client/mock.go -package mock_client
 
 // BluezelleClient provides a high level interface to access the Query and Transaction
 // rpc methods via Querier and Transactioner interfaces.
@@ -39,6 +40,10 @@ func NewBluzelleClient(config *Config) (*defaultBluzelleClient, error) {
 		return nil, MISSING_MNEMONIC_ERROR
 	}
 
+	if config.APIEndpoint == "" {
+		return nil, MISSING_API_ENDPOINT_ERROR
+	}
+
 	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect rpc websocket: %s", err.Error())
@@ -60,6 +65,16 @@ func (client *defaultBluzelleClient) Transaction() TransactionClient {
 	return client.transactioner
 }
 
-// func (client *defaultBluzelleClient) WithTransactions(ops TransactionOperation...) error {
-//
-// }
+type TransactionOperation interface {
+	PerformOperation(ctx context.Context) error
+}
+
+func (client *defaultBluzelleClient) WithTransactions(ctx context.Context, ops ...TransactionOperation) error {
+	for _, operation := range ops {
+		if err := operation.PerformOperation(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

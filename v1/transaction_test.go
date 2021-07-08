@@ -2,6 +2,7 @@ package bluzelledbgo
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"testing"
@@ -13,81 +14,372 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func generate200TransactionResponse(log, key string, code int, value []byte) string {
-	valueStr := string(value)
+func generate200Response(log, key string, code int, value []byte) string {
+	valueStr := base64.StdEncoding.EncodeToString(value)
 
 	return fmt.Sprintf(`{"error":"","result":{"response":{"log":"%s","height":"0","value":"%s","key":"%s","index":"-1","code":"%d"}},"id":0,"jsonrpc":"2.0"}`, log, valueStr, key, code)
 }
+
+func generateProtoResponseData(message proto.Message) []byte {
+	data, _ := proto.Marshal(message)
+
+	return data
+}
+
+var (
+	testCreator = "bluezelleFAKEADDRESS"
+	testUUID    = "testUUID"
+	testKey     = "fakeKey"
+	testValue   = "fakeValue"
+)
 
 func TestTransactionCreateHTTPMock(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	tcs := []struct {
-		name             string
-		method           string
-		statusCode       int
-		apiURL           string
-		createMsg        *pb.MsgCreate
-		expectedResponse *pb.MsgCreateResponse
-		expectedError    error
-	}{
-		{
-			name:       "200 txn create response returned",
-			method:     http.MethodGet,
-			statusCode: http.StatusInternalServerError,
-			apiURL:     testnetURL,
-			createMsg: &pb.MsgCreate{
-				Creator: "bluezelleFAKEADDRESS",
-				Uuid:    "testUUID",
-				Key:     "fakeKey",
-				Value:   []byte("fakeValue"),
-				Lease: &pb.Lease{
-					Hours: uint32(1),
-				},
-				Metadata: []byte{},
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgCreate{
+			Creator: testCreator,
+			Uuid:    testUUID,
+			Key:     testKey,
+			Value:   []byte(testValue),
+			Lease: &pb.Lease{
+				Hours: uint32(1),
 			},
-			expectedResponse: &pb.MsgCreateResponse{},
-			expectedError:    nil,
-		},
-	}
+			Metadata: []byte{},
+		}
+		responseData = generateProtoResponseData(&pb.MsgCreateResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			var (
-				config = &Config{
-					APIEndpoint: testnetURL,
-				}
-				responseData []byte
-				err          error
-			)
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
 
-			rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+	assert.Nil(t, err)
 
-			assert.Nil(t, err)
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", message.Key, 0, responseData))
 
-			if tc.expectedResponse != nil {
-				if responseData, err = proto.Marshal(tc.expectedResponse); err != nil {
-					t.Errorf("was not expecting an error proto marshalling expected response")
-				}
-			}
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
 
-			stringResponder := httpmock.NewStringResponder(tc.statusCode, generate200TransactionResponse("", tc.createMsg.Key, 0, responseData))
+	txnClient := NewTransactionClient(config, rpcClient)
 
-			httpmock.RegisterResponder(tc.method, tc.apiURL, stringResponder)
+	ctx := context.Background()
 
-			txnClient := NewTransactionClient(config, rpcClient)
+	_, err = txnClient.Create(ctx, message)
 
-			ctx := context.Background()
+	assert.Nil(t, err)
+}
 
-			_, err = txnClient.Create(ctx, tc.createMsg)
+func TestTransactionDeleteHTTPMock(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 
-			if tc.expectedError != nil && err == nil {
-				t.Errorf("expected an error but did not recieve one")
-				return
-			} else if tc.expectedError != nil && err != nil {
-				assert.Equal(t, tc.expectedError.Error(), err.Error())
-			}
-		})
-	}
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgDelete{
+			Creator: testCreator,
+			Uuid:    testUUID,
+			Key:     testKey,
+		}
+		responseData = generateProtoResponseData(&pb.MsgDeleteResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
+
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+
+	assert.Nil(t, err)
+
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", message.Key, 0, responseData))
+
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
+
+	txnClient := NewTransactionClient(config, rpcClient)
+
+	ctx := context.Background()
+
+	_, err = txnClient.Delete(ctx, message)
+
+	assert.Nil(t, err)
+}
+
+func TestTransactionDeleteAllHTTPMock(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgDeleteAll{
+			Creator: testCreator,
+			Uuid:    testUUID,
+		}
+		responseData = generateProtoResponseData(&pb.MsgDeleteAllResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
+
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+
+	assert.Nil(t, err)
+
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", "", 0, responseData))
+
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
+
+	txnClient := NewTransactionClient(config, rpcClient)
+
+	ctx := context.Background()
+
+	_, err = txnClient.DeleteAll(ctx, message)
+
+	assert.Nil(t, err)
+}
+
+func TestTransactionMultiUpdateHTTPMock(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgMultiUpdate{
+			Creator: testCreator,
+			Uuid:    testUUID,
+		}
+		responseData = generateProtoResponseData(&pb.MsgMultiUpdateResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
+
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+
+	assert.Nil(t, err)
+
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", "", 0, responseData))
+
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
+
+	txnClient := NewTransactionClient(config, rpcClient)
+
+	ctx := context.Background()
+
+	_, err = txnClient.MultiUpdate(ctx, message)
+
+	assert.Nil(t, err)
+}
+
+func TestTransactionRenewLeasesAllHTTPMock(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgRenewLeasesAll{
+			Creator: testCreator,
+			Uuid:    testUUID,
+			Lease: &pb.Lease{
+				Hours: uint32(1),
+			},
+		}
+		responseData = generateProtoResponseData(&pb.MsgRenewLeasesAllResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
+
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+
+	assert.Nil(t, err)
+
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", "", 0, responseData))
+
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
+
+	txnClient := NewTransactionClient(config, rpcClient)
+
+	ctx := context.Background()
+
+	_, err = txnClient.RenewLeasesAll(ctx, message)
+
+	assert.Nil(t, err)
+}
+
+func TestTransactionRenewLeaseHTTPMock(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgRenewLease{
+			Creator: testCreator,
+			Uuid:    testUUID,
+			Lease: &pb.Lease{
+				Hours: uint32(1),
+			},
+		}
+		responseData = generateProtoResponseData(&pb.MsgRenewLeaseResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
+
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+
+	assert.Nil(t, err)
+
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", "", 0, responseData))
+
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
+
+	txnClient := NewTransactionClient(config, rpcClient)
+
+	ctx := context.Background()
+
+	_, err = txnClient.RenewLease(ctx, message)
+
+	assert.Nil(t, err)
+}
+
+func TestTransactionRenameHTTPMock(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgRename{
+			Creator: testCreator,
+			Uuid:    testUUID,
+			Key:     testKey,
+			NewKey:  "newTestingKey",
+		}
+		responseData = generateProtoResponseData(&pb.MsgRenameResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
+
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+
+	assert.Nil(t, err)
+
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", "", 0, responseData))
+
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
+
+	txnClient := NewTransactionClient(config, rpcClient)
+
+	ctx := context.Background()
+
+	_, err = txnClient.Rename(ctx, message)
+
+	assert.Nil(t, err)
+}
+
+func TestTransactionUpdateHTTPMock(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgUpdate{
+			Creator: testCreator,
+			Uuid:    testUUID,
+			Key:     testKey,
+			Value:   []byte(testValue),
+			Lease: &pb.Lease{
+				Hours: uint32(1),
+			},
+			Metadata: []byte{},
+		}
+		responseData = generateProtoResponseData(&pb.MsgUpdateResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
+
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+
+	assert.Nil(t, err)
+
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", "", 0, responseData))
+
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
+
+	txnClient := NewTransactionClient(config, rpcClient)
+
+	ctx := context.Background()
+
+	_, err = txnClient.Update(ctx, message)
+
+	assert.Nil(t, err)
+}
+
+func TestTransactionUpsertHTTPMock(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var (
+		method     = http.MethodPost
+		statusCode = http.StatusOK
+		apiURL     = testnetURL
+		message    = &pb.MsgUpsert{
+			Creator: testCreator,
+			Uuid:    testUUID,
+			Key:     testKey,
+			Value:   []byte(testValue),
+			Lease: &pb.Lease{
+				Hours: uint32(1),
+			},
+			Metadata: []byte{},
+		}
+		responseData = generateProtoResponseData(&pb.MsgUpsertResponse{})
+		config       = &Config{
+			APIEndpoint: testnetURL,
+		}
+		err error
+	)
+
+	rpcClient, err := client.NewClientFromNode(config.APIEndpoint)
+
+	assert.Nil(t, err)
+
+	stringResponder := httpmock.NewStringResponder(statusCode, generate200Response("", "", 0, responseData))
+
+	httpmock.RegisterResponder(method, apiURL, stringResponder)
+
+	txnClient := NewTransactionClient(config, rpcClient)
+
+	ctx := context.Background()
+
+	_, err = txnClient.Upsert(ctx, message)
+
+	assert.Nil(t, err)
 }

@@ -2,6 +2,8 @@ package bluzelledbgo
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	pb "github.com/cpurta/bluzelle-db-go/types"
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -9,6 +11,8 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"google.golang.org/protobuf/proto"
 )
+
+//go:generate mockgen -source ./query.go -destination ./mock_client/mock_query.go -package mock_client
 
 type QueryClient interface {
 	Count(ctx context.Context, uuid string) (*pb.QueryCountResponse, error)
@@ -52,6 +56,10 @@ func (client *defaultQueryClient) Count(ctx context.Context, uuid string) (*pb.Q
 	if data, err = proto.Marshal(queryCountRequest); err != nil {
 		return nil, err
 	}
+
+	b, _ := json.Marshal(bytes.HexBytes(data))
+
+	fmt.Println("Sending data:", string(b))
 
 	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
 		return nil, err
