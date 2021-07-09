@@ -110,6 +110,118 @@ func (mr *MockTransactionClientMockRecorder) NewTransactionCreate(create interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionCreate", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionCreate), create)
 }
 
+// NewTransactionDelete mocks base method.
+func (m *MockTransactionClient) NewTransactionDelete(delete *types.MsgDelete) bluzelledbgo.TransactionOperation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewTransactionDelete", delete)
+	ret0, _ := ret[0].(bluzelledbgo.TransactionOperation)
+	return ret0
+}
+
+// NewTransactionDelete indicates an expected call of NewTransactionDelete.
+func (mr *MockTransactionClientMockRecorder) NewTransactionDelete(delete interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionDelete", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionDelete), delete)
+}
+
+// NewTransactionDeleteAll mocks base method.
+func (m *MockTransactionClient) NewTransactionDeleteAll(deleteAll *types.MsgDeleteAll) bluzelledbgo.TransactionOperation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewTransactionDeleteAll", deleteAll)
+	ret0, _ := ret[0].(bluzelledbgo.TransactionOperation)
+	return ret0
+}
+
+// NewTransactionDeleteAll indicates an expected call of NewTransactionDeleteAll.
+func (mr *MockTransactionClientMockRecorder) NewTransactionDeleteAll(deleteAll interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionDeleteAll", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionDeleteAll), deleteAll)
+}
+
+// NewTransactionMultiUpdate mocks base method.
+func (m *MockTransactionClient) NewTransactionMultiUpdate(multiUpdate *types.MsgMultiUpdate) bluzelledbgo.TransactionOperation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewTransactionMultiUpdate", multiUpdate)
+	ret0, _ := ret[0].(bluzelledbgo.TransactionOperation)
+	return ret0
+}
+
+// NewTransactionMultiUpdate indicates an expected call of NewTransactionMultiUpdate.
+func (mr *MockTransactionClientMockRecorder) NewTransactionMultiUpdate(multiUpdate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionMultiUpdate", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionMultiUpdate), multiUpdate)
+}
+
+// NewTransactionRename mocks base method.
+func (m *MockTransactionClient) NewTransactionRename(rename *types.MsgRename) bluzelledbgo.TransactionOperation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewTransactionRename", rename)
+	ret0, _ := ret[0].(bluzelledbgo.TransactionOperation)
+	return ret0
+}
+
+// NewTransactionRename indicates an expected call of NewTransactionRename.
+func (mr *MockTransactionClientMockRecorder) NewTransactionRename(rename interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionRename", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionRename), rename)
+}
+
+// NewTransactionRenewLease mocks base method.
+func (m *MockTransactionClient) NewTransactionRenewLease(renewLease *types.MsgRenewLease) bluzelledbgo.TransactionOperation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewTransactionRenewLease", renewLease)
+	ret0, _ := ret[0].(bluzelledbgo.TransactionOperation)
+	return ret0
+}
+
+// NewTransactionRenewLease indicates an expected call of NewTransactionRenewLease.
+func (mr *MockTransactionClientMockRecorder) NewTransactionRenewLease(renewLease interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionRenewLease", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionRenewLease), renewLease)
+}
+
+// NewTransactionRenewLeasesAll mocks base method.
+func (m *MockTransactionClient) NewTransactionRenewLeasesAll(renewLeasesAll *types.MsgRenewLeasesAll) bluzelledbgo.TransactionOperation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewTransactionRenewLeasesAll", renewLeasesAll)
+	ret0, _ := ret[0].(bluzelledbgo.TransactionOperation)
+	return ret0
+}
+
+// NewTransactionRenewLeasesAll indicates an expected call of NewTransactionRenewLeasesAll.
+func (mr *MockTransactionClientMockRecorder) NewTransactionRenewLeasesAll(renewLeasesAll interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionRenewLeasesAll", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionRenewLeasesAll), renewLeasesAll)
+}
+
+// NewTransactionUpdate mocks base method.
+func (m *MockTransactionClient) NewTransactionUpdate(update *types.MsgUpdate) bluzelledbgo.TransactionOperation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewTransactionUpdate", update)
+	ret0, _ := ret[0].(bluzelledbgo.TransactionOperation)
+	return ret0
+}
+
+// NewTransactionUpdate indicates an expected call of NewTransactionUpdate.
+func (mr *MockTransactionClientMockRecorder) NewTransactionUpdate(update interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionUpdate", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionUpdate), update)
+}
+
+// NewTransactionUpsert mocks base method.
+func (m *MockTransactionClient) NewTransactionUpsert(update *types.MsgUpsert) bluzelledbgo.TransactionOperation {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewTransactionUpsert", update)
+	ret0, _ := ret[0].(bluzelledbgo.TransactionOperation)
+	return ret0
+}
+
+// NewTransactionUpsert indicates an expected call of NewTransactionUpsert.
+func (mr *MockTransactionClientMockRecorder) NewTransactionUpsert(update interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTransactionUpsert", reflect.TypeOf((*MockTransactionClient)(nil).NewTransactionUpsert), update)
+}
+
 // Rename mocks base method.
 func (m *MockTransactionClient) Rename(ctx context.Context, rename *types.MsgRename) (*types.MsgRenameResponse, error) {
 	m.ctrl.T.Helper()

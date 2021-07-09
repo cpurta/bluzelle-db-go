@@ -26,6 +26,7 @@ func TestQueryCountHTTPMock(t *testing.T) {
 		responseData = `{"jsonrpc":"2.0","id":1234,"result":{"response":{"code":0,"log":"","info":"","index":"0","key":null,"value":"Cgh0ZXN0VVVJRA==","proofOps":null,"height":"204818","codespace":""}}}`
 		config       = &Config{
 			APIEndpoint: testnetURL,
+			UUID:        testUUID,
 		}
 		resp *pb.QueryCountResponse
 		err  error
@@ -43,7 +44,7 @@ func TestQueryCountHTTPMock(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, err = queryClient.Count(ctx, testUUID)
+	resp, err = queryClient.Count(ctx)
 
 	assert.Nil(t, err)
 	assert.Equal(t, testUUID, resp.Uuid)
@@ -65,6 +66,7 @@ func TestGetLeaseHTTPMock(t *testing.T) {
 		})
 		config = &Config{
 			APIEndpoint: testnetURL,
+			UUID:        testUUID,
 		}
 		resp *pb.QueryGetLeaseResponse
 		err  error
@@ -82,7 +84,7 @@ func TestGetLeaseHTTPMock(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, err = queryClient.GetLease(ctx, testUUID, testKey)
+	resp, err = queryClient.GetLease(ctx, testKey)
 
 	assert.Nil(t, err)
 	assert.Equal(t, testUUID, resp.Uuid)
@@ -109,6 +111,7 @@ func TestGetNShortestLeasesHTTPMock(t *testing.T) {
 		})
 		config = &Config{
 			APIEndpoint: testnetURL,
+			UUID:        testUUID,
 		}
 		resp *pb.QueryGetNShortestLeasesResponse
 		err  error
@@ -126,7 +129,7 @@ func TestGetNShortestLeasesHTTPMock(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, err = queryClient.GetNShortestLeases(ctx, testUUID, 10)
+	resp, err = queryClient.GetNShortestLeases(ctx, 10)
 
 	assert.Nil(t, err)
 	assert.Equal(t, testUUID, resp.Uuid)

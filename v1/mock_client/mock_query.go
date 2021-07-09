@@ -36,136 +36,136 @@ func (m *MockQueryClient) EXPECT() *MockQueryClientMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MockQueryClient) Count(ctx context.Context, uuid string) (*types.QueryCountResponse, error) {
+func (m *MockQueryClient) Count(ctx context.Context) (*types.QueryCountResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Count", ctx, uuid)
+	ret := m.ctrl.Call(m, "Count", ctx)
 	ret0, _ := ret[0].(*types.QueryCountResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Count indicates an expected call of Count.
-func (mr *MockQueryClientMockRecorder) Count(ctx, uuid interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) Count(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockQueryClient)(nil).Count), ctx, uuid)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockQueryClient)(nil).Count), ctx)
 }
 
 // GetLease mocks base method.
-func (m *MockQueryClient) GetLease(ctx context.Context, uuid, key string) (*types.QueryGetLeaseResponse, error) {
+func (m *MockQueryClient) GetLease(ctx context.Context, key string) (*types.QueryGetLeaseResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLease", ctx, uuid, key)
+	ret := m.ctrl.Call(m, "GetLease", ctx, key)
 	ret0, _ := ret[0].(*types.QueryGetLeaseResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetLease indicates an expected call of GetLease.
-func (mr *MockQueryClientMockRecorder) GetLease(ctx, uuid, key interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) GetLease(ctx, key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLease", reflect.TypeOf((*MockQueryClient)(nil).GetLease), ctx, uuid, key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLease", reflect.TypeOf((*MockQueryClient)(nil).GetLease), ctx, key)
 }
 
 // GetNShortestLeases mocks base method.
-func (m *MockQueryClient) GetNShortestLeases(ctx context.Context, uuid string, number int) (*types.QueryGetNShortestLeasesResponse, error) {
+func (m *MockQueryClient) GetNShortestLeases(ctx context.Context, number int) (*types.QueryGetNShortestLeasesResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNShortestLeases", ctx, uuid, number)
+	ret := m.ctrl.Call(m, "GetNShortestLeases", ctx, number)
 	ret0, _ := ret[0].(*types.QueryGetNShortestLeasesResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNShortestLeases indicates an expected call of GetNShortestLeases.
-func (mr *MockQueryClientMockRecorder) GetNShortestLeases(ctx, uuid, number interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) GetNShortestLeases(ctx, number interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNShortestLeases", reflect.TypeOf((*MockQueryClient)(nil).GetNShortestLeases), ctx, uuid, number)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNShortestLeases", reflect.TypeOf((*MockQueryClient)(nil).GetNShortestLeases), ctx, number)
 }
 
 // Has mocks base method.
-func (m *MockQueryClient) Has(ctx context.Context, uuid, key string) (*types.QueryHasResponse, error) {
+func (m *MockQueryClient) Has(ctx context.Context, key string) (*types.QueryHasResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Has", ctx, uuid, key)
+	ret := m.ctrl.Call(m, "Has", ctx, key)
 	ret0, _ := ret[0].(*types.QueryHasResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Has indicates an expected call of Has.
-func (mr *MockQueryClientMockRecorder) Has(ctx, uuid, key interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) Has(ctx, key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockQueryClient)(nil).Has), ctx, uuid, key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Has", reflect.TypeOf((*MockQueryClient)(nil).Has), ctx, key)
 }
 
 // KeyValues mocks base method.
-func (m *MockQueryClient) KeyValues(ctx context.Context, uuid, startKey string, limit int64) (*types.QueryKeyValuesResponse, error) {
+func (m *MockQueryClient) KeyValues(ctx context.Context, startKey string, limit int64) (*types.QueryKeyValuesResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "KeyValues", ctx, uuid, startKey, limit)
+	ret := m.ctrl.Call(m, "KeyValues", ctx, startKey, limit)
 	ret0, _ := ret[0].(*types.QueryKeyValuesResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // KeyValues indicates an expected call of KeyValues.
-func (mr *MockQueryClientMockRecorder) KeyValues(ctx, uuid, startKey, limit interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) KeyValues(ctx, startKey, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KeyValues", reflect.TypeOf((*MockQueryClient)(nil).KeyValues), ctx, uuid, startKey, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KeyValues", reflect.TypeOf((*MockQueryClient)(nil).KeyValues), ctx, startKey, limit)
 }
 
 // Keys mocks base method.
-func (m *MockQueryClient) Keys(ctx context.Context, uuid, startKey string, limit int64) (*types.QueryKeysResponse, error) {
+func (m *MockQueryClient) Keys(ctx context.Context, startKey string, limit int64) (*types.QueryKeysResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Keys", ctx, uuid, startKey, limit)
+	ret := m.ctrl.Call(m, "Keys", ctx, startKey, limit)
 	ret0, _ := ret[0].(*types.QueryKeysResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Keys indicates an expected call of Keys.
-func (mr *MockQueryClientMockRecorder) Keys(ctx, uuid, startKey, limit interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) Keys(ctx, startKey, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Keys", reflect.TypeOf((*MockQueryClient)(nil).Keys), ctx, uuid, startKey, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Keys", reflect.TypeOf((*MockQueryClient)(nil).Keys), ctx, startKey, limit)
 }
 
 // MyKeys mocks base method.
-func (m *MockQueryClient) MyKeys(ctx context.Context, uuid, address, startKey string, limit int64) (*types.QueryMyKeysResponse, error) {
+func (m *MockQueryClient) MyKeys(ctx context.Context, address, startKey string, limit int64) (*types.QueryMyKeysResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MyKeys", ctx, uuid, address, startKey, limit)
+	ret := m.ctrl.Call(m, "MyKeys", ctx, address, startKey, limit)
 	ret0, _ := ret[0].(*types.QueryMyKeysResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // MyKeys indicates an expected call of MyKeys.
-func (mr *MockQueryClientMockRecorder) MyKeys(ctx, uuid, address, startKey, limit interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) MyKeys(ctx, address, startKey, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MyKeys", reflect.TypeOf((*MockQueryClient)(nil).MyKeys), ctx, uuid, address, startKey, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MyKeys", reflect.TypeOf((*MockQueryClient)(nil).MyKeys), ctx, address, startKey, limit)
 }
 
 // Read mocks base method.
-func (m *MockQueryClient) Read(ctx context.Context, uuid, key string) (*types.QueryReadResponse, error) {
+func (m *MockQueryClient) Read(ctx context.Context, key string) (*types.QueryReadResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Read", ctx, uuid, key)
+	ret := m.ctrl.Call(m, "Read", ctx, key)
 	ret0, _ := ret[0].(*types.QueryReadResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockQueryClientMockRecorder) Read(ctx, uuid, key interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) Read(ctx, key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockQueryClient)(nil).Read), ctx, uuid, key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockQueryClient)(nil).Read), ctx, key)
 }
 
 // Search mocks base method.
-func (m *MockQueryClient) Search(ctx context.Context, uuid, searchString, startKey string, limit int64) (*types.QuerySearchResponse, error) {
+func (m *MockQueryClient) Search(ctx context.Context, searchString, startKey string, limit int64) (*types.QuerySearchResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Search", ctx, uuid, searchString, startKey, limit)
+	ret := m.ctrl.Call(m, "Search", ctx, searchString, startKey, limit)
 	ret0, _ := ret[0].(*types.QuerySearchResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Search indicates an expected call of Search.
-func (mr *MockQueryClientMockRecorder) Search(ctx, uuid, searchString, startKey, limit interface{}) *gomock.Call {
+func (mr *MockQueryClientMockRecorder) Search(ctx, searchString, startKey, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockQueryClient)(nil).Search), ctx, uuid, searchString, startKey, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockQueryClient)(nil).Search), ctx, searchString, startKey, limit)
 }

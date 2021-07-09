@@ -2,7 +2,6 @@ package bluzelledbgo
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	pb "github.com/cpurta/bluzelle-db-go/types"
@@ -15,15 +14,15 @@ import (
 //go:generate mockgen -source ./query.go -destination ./mock_client/mock_query.go -package mock_client
 
 type QueryClient interface {
-	Count(ctx context.Context, uuid string) (*pb.QueryCountResponse, error)
-	GetLease(ctx context.Context, uuid, key string) (*pb.QueryGetLeaseResponse, error)
-	GetNShortestLeases(ctx context.Context, uuid string, number int) (*pb.QueryGetNShortestLeasesResponse, error)
-	Has(ctx context.Context, uuid, key string) (*pb.QueryHasResponse, error)
-	Keys(ctx context.Context, uuid, startKey string, limit int64) (*pb.QueryKeysResponse, error)
-	KeyValues(ctx context.Context, uuid, startKey string, limit int64) (*pb.QueryKeyValuesResponse, error)
-	MyKeys(ctx context.Context, uuid, address, startKey string, limit int64) (*pb.QueryMyKeysResponse, error)
-	Read(ctx context.Context, uuid, key string) (*pb.QueryReadResponse, error)
-	Search(ctx context.Context, uuid, searchString, startKey string, limit int64) (*pb.QuerySearchResponse, error)
+	Count(ctx context.Context) (*pb.QueryCountResponse, error)
+	GetLease(ctx context.Context, key string) (*pb.QueryGetLeaseResponse, error)
+	GetNShortestLeases(ctx context.Context, number int) (*pb.QueryGetNShortestLeasesResponse, error)
+	Has(ctx context.Context, key string) (*pb.QueryHasResponse, error)
+	Keys(ctx context.Context, startKey string, limit int64) (*pb.QueryKeysResponse, error)
+	KeyValues(ctx context.Context, startKey string, limit int64) (*pb.QueryKeyValuesResponse, error)
+	MyKeys(ctx context.Context, address, startKey string, limit int64) (*pb.QueryMyKeysResponse, error)
+	Read(ctx context.Context, key string) (*pb.QueryReadResponse, error)
+	Search(ctx context.Context, searchString, startKey string, limit int64) (*pb.QuerySearchResponse, error)
 }
 
 var _ QueryClient = &defaultQueryClient{}
@@ -40,14 +39,34 @@ func NewQueryClient(config *Config, rpcClient *rpchttp.HTTP) *defaultQueryClient
 	}
 }
 
-func (client *defaultQueryClient) Count(ctx context.Context, uuid string) (*pb.QueryCountResponse, error) {
+func (client *defaultQueryClient) makeABCIRequest(ctx context.Context, path string, data []byte) ([]byte, error) {
+	var (
+		response *ctypes.ResultABCIQuery
+		err      error
+	)
+
+	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+		return nil, err
+	}
+
+	if response == nil {
+		return nil, NIL_RESPONSE_RETURNED_ERROR
+	}
+
+	if response.Response.Log != "" {
+		return nil, fmt.Errorf("[code: %d]: %s", response.Response.Code, response.Response.Log)
+	}
+
+	return response.Response.Value, nil
+}
+
+func (client *defaultQueryClient) Count(ctx context.Context) (*pb.QueryCountResponse, error) {
 	var (
 		queryCountRequest = &pb.QueryCountRequest{
-			Uuid: uuid,
+			Uuid: client.config.UUID,
 		}
 		path               = "/bluzelle.curium.crud.Query/Count"
 		data               []byte
-		response           *ctypes.ResultABCIQuery
 		value              []byte
 		queryCountResponse = &pb.QueryCountResponse{}
 		err                error
@@ -57,19 +76,9 @@ func (client *defaultQueryClient) Count(ctx context.Context, uuid string) (*pb.Q
 		return nil, err
 	}
 
-	b, _ := json.Marshal(bytes.HexBytes(data))
-
-	fmt.Println("Sending data:", string(b))
-
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, queryCountResponse); err != nil {
 		return nil, err
@@ -78,14 +87,14 @@ func (client *defaultQueryClient) Count(ctx context.Context, uuid string) (*pb.Q
 	return queryCountResponse, nil
 }
 
-func (client *defaultQueryClient) GetLease(ctx context.Context, uuid, key string) (*pb.QueryGetLeaseResponse, error) {
+func (client *defaultQueryClient) GetLease(ctx context.Context, key string) (*pb.QueryGetLeaseResponse, error) {
 	var (
 		queryGetLeaseRequest = &pb.QueryGetLeaseRequest{
-			Uuid: uuid,
+			Uuid: client.config.UUID,
+			Key:  key,
 		}
 		path                  = "/bluzelle.curium.crud.Query/GetLease"
 		data                  []byte
-		response              *ctypes.ResultABCIQuery
 		value                 []byte
 		queryGetLeaseResponse = &pb.QueryGetLeaseResponse{}
 		err                   error
@@ -95,15 +104,9 @@ func (client *defaultQueryClient) GetLease(ctx context.Context, uuid, key string
 		return nil, err
 	}
 
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, queryGetLeaseResponse); err != nil {
 		return nil, err
@@ -112,15 +115,14 @@ func (client *defaultQueryClient) GetLease(ctx context.Context, uuid, key string
 	return queryGetLeaseResponse, nil
 }
 
-func (client *defaultQueryClient) GetNShortestLeases(ctx context.Context, uuid string, number int) (*pb.QueryGetNShortestLeasesResponse, error) {
+func (client *defaultQueryClient) GetNShortestLeases(ctx context.Context, number int) (*pb.QueryGetNShortestLeasesResponse, error) {
 	var (
 		queryGetNShortestLeasesRequest = &pb.QueryGetNShortestLeasesRequest{
-			Uuid: uuid,
+			Uuid: client.config.UUID,
 			Num:  uint32(number),
 		}
 		path                            = "/bluzelle.curium.crud.Query/GetNShortestLeases"
 		data                            []byte
-		response                        *ctypes.ResultABCIQuery
 		value                           []byte
 		queryGetNShortestLeasesResponse = &pb.QueryGetNShortestLeasesResponse{}
 		err                             error
@@ -130,15 +132,9 @@ func (client *defaultQueryClient) GetNShortestLeases(ctx context.Context, uuid s
 		return nil, err
 	}
 
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, queryGetNShortestLeasesResponse); err != nil {
 		return nil, err
@@ -147,15 +143,14 @@ func (client *defaultQueryClient) GetNShortestLeases(ctx context.Context, uuid s
 	return queryGetNShortestLeasesResponse, nil
 }
 
-func (client *defaultQueryClient) Has(ctx context.Context, uuid, key string) (*pb.QueryHasResponse, error) {
+func (client *defaultQueryClient) Has(ctx context.Context, key string) (*pb.QueryHasResponse, error) {
 	var (
 		queryHasRequest = &pb.QueryHasRequest{
-			Uuid: uuid,
+			Uuid: client.config.UUID,
 			Key:  key,
 		}
 		path             = "/bluzelle.curium.crud.Query/Has"
 		data             []byte
-		response         *ctypes.ResultABCIQuery
 		value            []byte
 		queryHasResponse = &pb.QueryHasResponse{}
 		err              error
@@ -165,15 +160,9 @@ func (client *defaultQueryClient) Has(ctx context.Context, uuid, key string) (*p
 		return nil, err
 	}
 
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, queryHasResponse); err != nil {
 		return nil, err
@@ -182,10 +171,10 @@ func (client *defaultQueryClient) Has(ctx context.Context, uuid, key string) (*p
 	return queryHasResponse, nil
 }
 
-func (client *defaultQueryClient) Keys(ctx context.Context, uuid, startKey string, limit int64) (*pb.QueryKeysResponse, error) {
+func (client *defaultQueryClient) Keys(ctx context.Context, startKey string, limit int64) (*pb.QueryKeysResponse, error) {
 	var (
 		queryKeysRequest = &pb.QueryKeysRequest{
-			Uuid: uuid,
+			Uuid: client.config.UUID,
 			Pagination: &pb.PagingRequest{
 				StartKey: startKey,
 				Limit:    uint64(limit),
@@ -193,7 +182,6 @@ func (client *defaultQueryClient) Keys(ctx context.Context, uuid, startKey strin
 		}
 		path              = "/bluzelle.curium.crud.Query/Keys"
 		data              []byte
-		response          *ctypes.ResultABCIQuery
 		value             []byte
 		queryKeysResponse = &pb.QueryKeysResponse{}
 		err               error
@@ -203,15 +191,9 @@ func (client *defaultQueryClient) Keys(ctx context.Context, uuid, startKey strin
 		return nil, err
 	}
 
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, queryKeysResponse); err != nil {
 		return nil, err
@@ -220,10 +202,10 @@ func (client *defaultQueryClient) Keys(ctx context.Context, uuid, startKey strin
 	return queryKeysResponse, nil
 }
 
-func (client *defaultQueryClient) KeyValues(ctx context.Context, uuid, startKey string, limit int64) (*pb.QueryKeyValuesResponse, error) {
+func (client *defaultQueryClient) KeyValues(ctx context.Context, startKey string, limit int64) (*pb.QueryKeyValuesResponse, error) {
 	var (
 		queryKeyValuesRequest = &pb.QueryKeyValuesRequest{
-			Uuid: uuid,
+			Uuid: client.config.UUID,
 			Pagination: &pb.PagingRequest{
 				StartKey: startKey,
 				Limit:    uint64(limit),
@@ -231,7 +213,6 @@ func (client *defaultQueryClient) KeyValues(ctx context.Context, uuid, startKey 
 		}
 		path                   = "/bluzelle.curium.crud.Query/KeyValues"
 		data                   []byte
-		response               *ctypes.ResultABCIQuery
 		value                  []byte
 		queryKeyValuesResponse = &pb.QueryKeyValuesResponse{}
 		err                    error
@@ -241,15 +222,9 @@ func (client *defaultQueryClient) KeyValues(ctx context.Context, uuid, startKey 
 		return nil, err
 	}
 
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, queryKeyValuesResponse); err != nil {
 		return nil, err
@@ -258,10 +233,10 @@ func (client *defaultQueryClient) KeyValues(ctx context.Context, uuid, startKey 
 	return queryKeyValuesResponse, nil
 }
 
-func (client *defaultQueryClient) MyKeys(ctx context.Context, uuid, address, startKey string, limit int64) (*pb.QueryMyKeysResponse, error) {
+func (client *defaultQueryClient) MyKeys(ctx context.Context, address, startKey string, limit int64) (*pb.QueryMyKeysResponse, error) {
 	var (
 		queryMyKeysRequest = &pb.QueryMyKeysRequest{
-			Uuid:    uuid,
+			Uuid:    client.config.UUID,
 			Address: address,
 			Pagination: &pb.PagingRequest{
 				StartKey: startKey,
@@ -270,7 +245,6 @@ func (client *defaultQueryClient) MyKeys(ctx context.Context, uuid, address, sta
 		}
 		path                = "/bluzelle.curium.crud.Query/MyKeys"
 		data                []byte
-		response            *ctypes.ResultABCIQuery
 		value               []byte
 		queryMyKeysResponse = &pb.QueryMyKeysResponse{}
 		err                 error
@@ -280,15 +254,9 @@ func (client *defaultQueryClient) MyKeys(ctx context.Context, uuid, address, sta
 		return nil, err
 	}
 
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, queryMyKeysResponse); err != nil {
 		return nil, err
@@ -297,15 +265,14 @@ func (client *defaultQueryClient) MyKeys(ctx context.Context, uuid, address, sta
 	return queryMyKeysResponse, nil
 }
 
-func (client *defaultQueryClient) Read(ctx context.Context, uuid, key string) (*pb.QueryReadResponse, error) {
+func (client *defaultQueryClient) Read(ctx context.Context, key string) (*pb.QueryReadResponse, error) {
 	var (
 		queryReadRequest = &pb.QueryReadRequest{
-			Uuid: uuid,
+			Uuid: client.config.UUID,
 			Key:  key,
 		}
 		path              = "/bluzelle.curium.crud.Query/Read"
 		data              []byte
-		response          *ctypes.ResultABCIQuery
 		value             []byte
 		queryReadResponse = &pb.QueryReadResponse{}
 		err               error
@@ -315,15 +282,9 @@ func (client *defaultQueryClient) Read(ctx context.Context, uuid, key string) (*
 		return nil, err
 	}
 
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, queryReadResponse); err != nil {
 		return nil, err
@@ -332,10 +293,10 @@ func (client *defaultQueryClient) Read(ctx context.Context, uuid, key string) (*
 	return queryReadResponse, nil
 }
 
-func (client *defaultQueryClient) Search(ctx context.Context, uuid, searchString, startKey string, limit int64) (*pb.QuerySearchResponse, error) {
+func (client *defaultQueryClient) Search(ctx context.Context, searchString, startKey string, limit int64) (*pb.QuerySearchResponse, error) {
 	var (
 		querySearchRequest = &pb.QuerySearchRequest{
-			Uuid:         uuid,
+			Uuid:         client.config.UUID,
 			SearchString: searchString,
 			Pagination: &pb.PagingRequest{
 				StartKey: startKey,
@@ -344,7 +305,6 @@ func (client *defaultQueryClient) Search(ctx context.Context, uuid, searchString
 		}
 		path                = "/bluzelle.curium.crud.Query/Search"
 		data                []byte
-		response            *ctypes.ResultABCIQuery
 		value               []byte
 		querySearchResponse = &pb.QuerySearchResponse{}
 		err                 error
@@ -354,15 +314,9 @@ func (client *defaultQueryClient) Search(ctx context.Context, uuid, searchString
 		return nil, err
 	}
 
-	if response, err = client.rpcClient.ABCIQuery(ctx, path, bytes.HexBytes(data)); err != nil {
+	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
 		return nil, err
 	}
-
-	if response == nil {
-		return nil, NIL_RESPONSE_RETURNED_ERROR
-	}
-
-	value = response.Response.Value
 
 	if err = proto.Unmarshal(value, querySearchResponse); err != nil {
 		return nil, err

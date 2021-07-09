@@ -2,6 +2,8 @@ package bluzelledbgo
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	pb "github.com/cpurta/bluzelle-db-go/types"
 	"github.com/tendermint/tendermint/libs/bytes"
@@ -60,6 +62,10 @@ func (client *defaultTransactionClient) Create(ctx context.Context, create *pb.M
 	if data, err = proto.Marshal(create); err != nil {
 		return nil, err
 	}
+
+	b, _ := json.Marshal(bytes.HexBytes(data))
+
+	fmt.Println("Sending msg \"create\" request:", string(b))
 
 	if response, err = client.rpcClient.ABCIQuery(ctx, "/bluzelle.curium.crud.Msg/Create", bytes.HexBytes(data)); err != nil {
 		return nil, err

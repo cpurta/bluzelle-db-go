@@ -11,7 +11,7 @@ import (
 
 func main() {
 	uuid := "2d280e84-dad1-453c-af56-7c16719e72e7"
-	key := "yourKey"
+	key := "exampleKey"
 
 	config := &blz.Config{
 		Mnemonic:    "your mnemonic goes here",
@@ -31,11 +31,11 @@ func main() {
 
 	defer cancel()
 
-	getLeaseResponse, err := blzClient.Query().GetLease(ctx, uuid, key)
+	hasResponse, err := blzClient.Query().Has(ctx, uuid, key)
 	if err != nil {
-		fmt.Println("unable to get lease for provided uuid and key:", err.Error())
+		fmt.Println("unable to determine if key exists for provided uuid:", err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Printf("UUID: %s Key: %s Seconds: %d\n", getLeaseResponse.Uuid, getLeaseResponse.Key, getLeaseResponse.Seconds)
+	fmt.Printf("Has: %t\n", hasResponse.Has)
 }
