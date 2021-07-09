@@ -14,15 +14,15 @@ import (
 //go:generate mockgen -source ./query.go -destination ./mock_client/mock_query.go -package mock_client
 
 type QueryClient interface {
-	Count(ctx context.Context) (*pb.QueryCountResponse, error)
-	GetLease(ctx context.Context, key string) (*pb.QueryGetLeaseResponse, error)
-	GetNShortestLeases(ctx context.Context, number int) (*pb.QueryGetNShortestLeasesResponse, error)
-	Has(ctx context.Context, key string) (*pb.QueryHasResponse, error)
-	Keys(ctx context.Context, startKey string, limit int64) (*pb.QueryKeysResponse, error)
-	KeyValues(ctx context.Context, startKey string, limit int64) (*pb.QueryKeyValuesResponse, error)
-	MyKeys(ctx context.Context, address, startKey string, limit int64) (*pb.QueryMyKeysResponse, error)
-	Read(ctx context.Context, key string) (*pb.QueryReadResponse, error)
-	Search(ctx context.Context, searchString, startKey string, limit int64) (*pb.QuerySearchResponse, error)
+	Count(ctx context.Context) (uint32, error)
+	GetLease(ctx context.Context, key string) (string, uint32, error)
+	GetNShortestLeases(ctx context.Context, number int) ([]*pb.KeyLease, error)
+	Has(ctx context.Context, key string) (bool, error)
+	Keys(ctx context.Context, startKey string, limit int64) ([]string, *pb.PagingResponse, error)
+	KeyValues(ctx context.Context, startKey string, limit int64) ([]*pb.KeyValue, *pb.PagingResponse, error)
+	MyKeys(ctx context.Context, address, startKey string, limit int64) ([]string, *pb.PagingResponse, error)
+	Read(ctx context.Context, key string) ([]byte, error)
+	Search(ctx context.Context, searchString, startKey string, limit int64) ([]*pb.KeyValue, *pb.PagingResponse, error)
 }
 
 var _ QueryClient = &defaultQueryClient{}
@@ -60,8 +60,9 @@ func (client *defaultQueryClient) makeABCIRequest(ctx context.Context, path stri
 	return response.Response.Value, nil
 }
 
-func (client *defaultQueryClient) Count(ctx context.Context) (*pb.QueryCountResponse, error) {
+func (client *defaultQueryClient) Count(ctx context.Context) (uint32, error) {
 	var (
+		defaultValue      = uint32(0)
 		queryCountRequest = &pb.QueryCountRequest{
 			Uuid: client.config.UUID,
 		}
@@ -73,22 +74,24 @@ func (client *defaultQueryClient) Count(ctx context.Context) (*pb.QueryCountResp
 	)
 
 	if data, err = proto.Marshal(queryCountRequest); err != nil {
-		return nil, err
+		return defaultValue, err
 	}
 
 	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
-		return nil, err
+		return defaultValue, err
 	}
 
 	if err = proto.Unmarshal(value, queryCountResponse); err != nil {
-		return nil, err
+		return defaultValue, err
 	}
 
-	return queryCountResponse, nil
+	return queryCountResponse.Count, nil
 }
 
-func (client *defaultQueryClient) GetLease(ctx context.Context, key string) (*pb.QueryGetLeaseResponse, error) {
+func (client *defaultQueryClient) GetLease(ctx context.Context, key string) (string, uint32, error) {
 	var (
+		defaultKey           = ""
+		defaultSeconds       = uint32(0)
 		queryGetLeaseRequest = &pb.QueryGetLeaseRequest{
 			Uuid: client.config.UUID,
 			Key:  key,
@@ -101,21 +104,21 @@ func (client *defaultQueryClient) GetLease(ctx context.Context, key string) (*pb
 	)
 
 	if data, err = proto.Marshal(queryGetLeaseRequest); err != nil {
-		return nil, err
+		return defaultKey, defaultSeconds, err
 	}
 
 	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
-		return nil, err
+		return defaultKey, defaultSeconds, err
 	}
 
 	if err = proto.Unmarshal(value, queryGetLeaseResponse); err != nil {
-		return nil, err
+		return defaultKey, defaultSeconds, err
 	}
 
-	return queryGetLeaseResponse, nil
+	return queryGetLeaseResponse.Key, queryGetLeaseResponse.Seconds, nil
 }
 
-func (client *defaultQueryClient) GetNShortestLeases(ctx context.Context, number int) (*pb.QueryGetNShortestLeasesResponse, error) {
+func (client *defaultQueryClient) GetNShortestLeases(ctx context.Context, number int) ([]*pb.KeyLease, error) {
 	var (
 		queryGetNShortestLeasesRequest = &pb.QueryGetNShortestLeasesRequest{
 			Uuid: client.config.UUID,
@@ -140,10 +143,10 @@ func (client *defaultQueryClient) GetNShortestLeases(ctx context.Context, number
 		return nil, err
 	}
 
-	return queryGetNShortestLeasesResponse, nil
+	return queryGetNShortestLeasesResponse.KeyLeases, nil
 }
 
-func (client *defaultQueryClient) Has(ctx context.Context, key string) (*pb.QueryHasResponse, error) {
+func (client *defaultQueryClient) Has(ctx context.Context, key string) (bool, error) {
 	var (
 		queryHasRequest = &pb.QueryHasRequest{
 			Uuid: client.config.UUID,
@@ -157,21 +160,21 @@ func (client *defaultQueryClient) Has(ctx context.Context, key string) (*pb.Quer
 	)
 
 	if data, err = proto.Marshal(queryHasRequest); err != nil {
-		return nil, err
+		return false, err
 	}
 
 	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
-		return nil, err
+		return false, err
 	}
 
 	if err = proto.Unmarshal(value, queryHasResponse); err != nil {
-		return nil, err
+		return false, err
 	}
 
-	return queryHasResponse, nil
+	return queryHasResponse.Has, nil
 }
 
-func (client *defaultQueryClient) Keys(ctx context.Context, startKey string, limit int64) (*pb.QueryKeysResponse, error) {
+func (client *defaultQueryClient) Keys(ctx context.Context, startKey string, limit int64) ([]string, *pb.PagingResponse, error) {
 	var (
 		queryKeysRequest = &pb.QueryKeysRequest{
 			Uuid: client.config.UUID,
@@ -188,21 +191,21 @@ func (client *defaultQueryClient) Keys(ctx context.Context, startKey string, lim
 	)
 
 	if data, err = proto.Marshal(queryKeysRequest); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err = proto.Unmarshal(value, queryKeysResponse); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return queryKeysResponse, nil
+	return queryKeysResponse.Keys, queryKeysResponse.Pagination, nil
 }
 
-func (client *defaultQueryClient) KeyValues(ctx context.Context, startKey string, limit int64) (*pb.QueryKeyValuesResponse, error) {
+func (client *defaultQueryClient) KeyValues(ctx context.Context, startKey string, limit int64) ([]*pb.KeyValue, *pb.PagingResponse, error) {
 	var (
 		queryKeyValuesRequest = &pb.QueryKeyValuesRequest{
 			Uuid: client.config.UUID,
@@ -219,21 +222,21 @@ func (client *defaultQueryClient) KeyValues(ctx context.Context, startKey string
 	)
 
 	if data, err = proto.Marshal(queryKeyValuesRequest); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err = proto.Unmarshal(value, queryKeyValuesResponse); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return queryKeyValuesResponse, nil
+	return queryKeyValuesResponse.KeyValues, queryKeyValuesResponse.Pagination, nil
 }
 
-func (client *defaultQueryClient) MyKeys(ctx context.Context, address, startKey string, limit int64) (*pb.QueryMyKeysResponse, error) {
+func (client *defaultQueryClient) MyKeys(ctx context.Context, address, startKey string, limit int64) ([]string, *pb.PagingResponse, error) {
 	var (
 		queryMyKeysRequest = &pb.QueryMyKeysRequest{
 			Uuid:    client.config.UUID,
@@ -251,21 +254,21 @@ func (client *defaultQueryClient) MyKeys(ctx context.Context, address, startKey 
 	)
 
 	if data, err = proto.Marshal(queryMyKeysRequest); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err = proto.Unmarshal(value, queryMyKeysResponse); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return queryMyKeysResponse, nil
+	return queryMyKeysResponse.Keys, queryMyKeysResponse.Pagination, nil
 }
 
-func (client *defaultQueryClient) Read(ctx context.Context, key string) (*pb.QueryReadResponse, error) {
+func (client *defaultQueryClient) Read(ctx context.Context, key string) ([]byte, error) {
 	var (
 		queryReadRequest = &pb.QueryReadRequest{
 			Uuid: client.config.UUID,
@@ -290,10 +293,10 @@ func (client *defaultQueryClient) Read(ctx context.Context, key string) (*pb.Que
 		return nil, err
 	}
 
-	return queryReadResponse, nil
+	return queryReadResponse.Value, nil
 }
 
-func (client *defaultQueryClient) Search(ctx context.Context, searchString, startKey string, limit int64) (*pb.QuerySearchResponse, error) {
+func (client *defaultQueryClient) Search(ctx context.Context, searchString, startKey string, limit int64) ([]*pb.KeyValue, *pb.PagingResponse, error) {
 	var (
 		querySearchRequest = &pb.QuerySearchRequest{
 			Uuid:         client.config.UUID,
@@ -311,16 +314,16 @@ func (client *defaultQueryClient) Search(ctx context.Context, searchString, star
 	)
 
 	if data, err = proto.Marshal(querySearchRequest); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if value, err = client.makeABCIRequest(ctx, path, data); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err = proto.Unmarshal(value, querySearchResponse); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return querySearchResponse, nil
+	return querySearchResponse.KeyValues, querySearchResponse.Pagination, nil
 }
